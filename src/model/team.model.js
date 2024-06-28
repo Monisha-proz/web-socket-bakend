@@ -31,7 +31,6 @@ const Team = DBconnection.define('teams', {
   // Sync the model with the database
   (async () => {
     await Team.sync({ force: false }); // This creates the table if it doesn't exist (force: false)
-    console.log('Teams table synced');
   })();
   
   // Export the Team model

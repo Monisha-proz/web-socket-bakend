@@ -1,53 +1,61 @@
-const { Sequelize, where } = require('sequelize');
-
-
-const teamModel = require('../model/team.model');
+const { Sequelize } = require('sequelize');
 const playerModel = require('../model/player.model');
-
-const {sendResponse} = require('../utils/response');
-
-
-// const { wss, playerData } = require('../../index'); // Import the WebSocket server instance
+const { sendResponse } = require('../utils/response');
+// const { broadcastUpdate,check, server } = require('../../index'); // Adjust path if necessary
 
 
-
-exports.updatePlayerScore = async(req,res)=>{
+exports.getPlayers=async(req,res)=>{
     try{
-        const { id, score } = req.body;
-        if(!id){
-            sendResponse('error', 401, 'Player id Missing', null,null,res);
-        }
+        const player = await playerModel.findAll({});
+        return sendResponse('success',200,null,null, player,res)
 
-        if(!score){
-            sendResponse('error', 401, 'Score Missing', null,null,res);
-
-        }
-        
-        
-        await playerModel.update({action:score},{where:{id}});
-        // await broadcastUpdate(id); // Broadcast the update to all clients
-        
     }catch(err){
-        console.log(err)
+        console.log(err);
         if (err instanceof Sequelize.ValidationError) {
-            sendResponse('error', 401, err.errors.map(e => e.message), null,null,res);
+            sendResponse('error', 401, err.errors.map(e => e.message), null, null, res);
+        } else {
+            sendResponse('error', 500, 'Error get Player ', null, null, res);
         }
-        sendResponse('error', 500, 'Error fetching Player', null, null, res);
     }
 }
+exports.getPlayer=async(req,res)=>{
+    try{
+        const player = await playerModel.findOne({});
+        return sendResponse('success',200,null,null, player,res)
 
+    }catch(err){
+        console.log(err);
+        if (err instanceof Sequelize.ValidationError) {
+            sendResponse('error', 401, err.errors.map(e => e.message), null, null, res);
+        } else {
+            sendResponse('error', 500, 'Error get Player ', null, null, res);
+        }
+    }
+}
+exports.updatePlayerScore = async (req, res) => {
+    try {
+        console.log("server",server)
+        const { id, score } = req.body;
+        if (!id) {
+            sendResponse('error', 401, 'Player id Missing', null, null, res);
+            return;
+        }
 
-const broadcastUpdate = async(id) => {
-    const player = await playerModel.findOne({ where: { id } });
+        if (!score) {
+            sendResponse('error', 401, 'Score Missing', null, null, res);
+            return;
+        }
 
-    if (player) {
-        // Update playerData array with the latest data
-        // playerData = playerData.map(players => (players.id == id ? player : players));
-        console.log(wss)
-        wss.clients.forEach((client) => {
-            if (client.readyState === client.OPEN) {
-                client.send(JSON.stringify(player));
-            }
-        });
+        await playerModel.update({ action: score }, { where: { id } });
+        check()
+        await broadcastUpdate(id); // Broadcast the update to all clients
+        sendResponse('success', 200, 'Score updated successfully', null, null, res);
+    } catch (err) {
+        console.log(err);
+        if (err instanceof Sequelize.ValidationError) {
+            sendResponse('error', 401, err.errors.map(e => e.message), null, null, res);
+        } else {
+            sendResponse('error', 500, 'Error updating Player score', null, null, res);
+        }
     }
 };
