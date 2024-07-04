@@ -18,16 +18,19 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use("/", router);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
 const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
+
 const wss = new WebSocketServer({ server });
+
+
 let playerlist=[];
 (async()=>{
-    playerlist = await playerModel.findOne({  });
+    playerlist = await playerModel.findOne({});
 })()
 
 wss.on('connection', async (ws) => {

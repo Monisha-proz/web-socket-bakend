@@ -19,6 +19,10 @@ const Team = DBconnection.define('teams', {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    profile_url: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     is_active: {
       type: DataTypes.TINYINT,
       defaultValue: 1,
