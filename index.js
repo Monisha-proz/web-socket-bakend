@@ -39,8 +39,11 @@ wss.on('connection', async (ws) => {
 
     try {
         // const players = await broadcastUpdate(1);
-        console.log("playerlist",playerlist)
-        ws.send(JSON.stringify(playerlist));
+        const resData = {
+            isBreak:false,
+            data: playerlist
+        }
+        ws.send(JSON.stringify(resData));
     } catch (error) {
         console.error("Error fetching initial player data:", error);
     }
@@ -55,13 +58,21 @@ wss.on('connection', async (ws) => {
 });
 
 
-broadcastUpdate = async (id) => {
+broadcastUpdate = async (id=1,isBreak) => {
+    console.log("id",id)
     try {
         const player = await playerModel.findOne({ where: { id } });
+        console.log("player",player)
         if (player) {
             wss.clients.forEach((client) => {
                 if (client.readyState === client.OPEN) {
-                    client.send(JSON.stringify(player));
+                    const resData = {
+                        isBreak,
+                        data: player.dataValues
+                    }                    
+                    
+                    
+                    client.send(JSON.stringify(resData));
                 }
             });
         }
@@ -73,19 +84,22 @@ broadcastUpdate = async (id) => {
 
 app.post('/update-player/score',async (req, res) => {
     try {
-        const { id, action } = req.body;
-        if (!id) {
-            sendResponse('error', 401, 'Player id Missing', null, null, res);
-            return;
+        const { id, action,isBreak,changed } = req.body;
+        if(changed ===false|| changed ==='false'){
+
+            if (!id) {
+                sendResponse('error', 401, 'Player id Missing', null, null, res);
+                return;
+            }
+    
+            if (!action) {
+                sendResponse('error', 401, 'action Missing', null, null, res);
+                return;
+            }
+            await playerModel.update({ action: action }, { where: { id } });
         }
 
-        if (!action) {
-            sendResponse('error', 401, 'action Missing', null, null, res);
-            return;
-        }
-
-        await playerModel.update({ action: action }, { where: { id } });
-        await broadcastUpdate(id); // Broadcast the update to all clients
+        await broadcastUpdate(id,isBreak); // Broadcast the update to all clients
         sendResponse('success', 200, 'Action updated successfully', null, null, res);
     } catch (err) {
         console.log(err);
