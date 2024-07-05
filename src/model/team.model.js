@@ -2,15 +2,12 @@ const { DataTypes, Model } = require("sequelize");
 const DBconnection = require("../../dbConfig");
 
 const Team = DBconnection.define('teams', {
-    id: {
-      type: DataTypes.BIGINT.UNSIGNED,
-      primaryKey: true,
-      autoIncrement: true,
-    },
-    uuid: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
+   
+  uuid: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    allowNull: false,
+  },
     name: {
       type: DataTypes.STRING(255),
       allowNull: true,
