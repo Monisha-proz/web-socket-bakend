@@ -14,11 +14,7 @@ const Players = DBconnection.define(
     name: {
       type: DataTypes.STRING(255),
       allowNull: true,
-    },
-    action: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
+    },   
     match_count: {
       type: DataTypes.TINYINT,
       allowNull: true,
@@ -38,6 +34,10 @@ const Players = DBconnection.define(
     is_active: {
       type: DataTypes.TINYINT,
       defaultValue: 1,
+    },
+    is_sold: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
     },
    
   },

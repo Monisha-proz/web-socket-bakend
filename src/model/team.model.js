@@ -32,10 +32,7 @@ const Team = DBconnection.define('teams', {
     timestamps: false, // Set to true if you want Sequelize to manage createdAt and updatedAt automatically
   });
   
-  // Sync the model with the database
-  (async () => {
-    await Team.sync({ force: false }); // This creates the table if it doesn't exist (force: false)
-  })();
+
   
   // Export the Team model
   module.exports = Team;
