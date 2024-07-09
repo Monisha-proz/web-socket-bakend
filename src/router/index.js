@@ -5,6 +5,7 @@ const teamController = require('../controller/teamController');
 const playerController = require('../controller/playersController');
 const userController = require('../controller/userController');
 
+
 /* TEAM */
 router.post('/get-team',teamController.getTeam)//get team
 
@@ -12,6 +13,11 @@ router.post('/get-team',teamController.getTeam)//get team
 // router.post('/update-player/score', playerController.updatePlayerScore)
 router.post('/get-players',playerController.getPlayers);
 router.post('/get-player',playerController.getPlayer);
+
+/* AUCTION HISTORY */
+router.post('/get-auction-history',playerController.auctionHistory);
+
+
 
 /* USER */
 router.post('/login',userController.login);

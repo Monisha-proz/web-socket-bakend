@@ -39,6 +39,10 @@ const Players = DBconnection.define(
       type: DataTypes.TINYINT,
       defaultValue: 0,
     },
+    is_cancel: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+    },
    
   },
   {

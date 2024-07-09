@@ -34,17 +34,19 @@ const wss = new WebSocketServer({ server });
 
 let playerlist=[];
 (async()=>{
-    const playerdata = await playerModel.findOne({where:{id:1},include:[{
+    const playerdata = await playerModel.findOne({where:{is_sold:0,is_cancel:0},
+        include:[{
         model:teamModel,
         attributes:['profile_url'],            
         where: {}
-    }]});
+    }],
+    order: [['id', 'ASC']],
+});
     const playerlists = await auctionListModel.findOne({where:{playerid:1}}) ;
     const  data ={
         ...playerdata.dataValues,
-        value:playerlists?.dataValues?.value ||700
+        value:playerlists?.dataValues?.value ||0
     }
-    console.log("data",data)
     playerlist =data;
 })()
 
@@ -73,21 +75,36 @@ wss.on('connection', async (ws) => {
 });
 
 
-broadcastUpdate = async (id=1,isBreak) => {
+broadcastUpdate = async (id,isBreak) => {
     console.log("id",id)
     try {
-        const player = await playerModel.findOne({ where: { id },include:[{
-            model:teamModel,
-            attributes:['profile_url'],            
-            where: {}
-        }] });
+        let player ;
+        if(id){
+            player = await playerModel.findOne({ where: { id },include:[{
+               model:teamModel,
+               attributes:['profile_url'],            
+               where: {}
+           }] });
+
+        }else{
+            player = await playerModel.findOne({ where: { is_sold:0,is_cancel:0 },include:[{
+                model:teamModel,
+                attributes:['profile_url'],            
+                where: {}
+            }],
+            order: [['id', 'ASC']],
+
+
+         });
+            
+        }
+
         console.log("player",player)
-        const playerlists = await auctionListModel.findOne({where:{playerid:id}}) ;
+        const playerlists = await auctionListModel.findOne({where:{playerid:player.dataValues.id}}) ;
     const  data ={
         ...player.dataValues,
         value:playerlists?.value
     }
-    console.log("data",data)
         console.log("player",player)
         // if (player) {
             wss.clients.forEach((client) => {
