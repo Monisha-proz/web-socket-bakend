@@ -17,6 +17,7 @@ dotenv.config();
 
 const app = express();
 const router = require("./src/router/index");
+const { authValidate } = require("./src/utils/authValidate");
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -51,7 +52,6 @@ let playerlist=[];
 })()
 
 wss.on('connection', async (ws) => {
-    console.log('WebSocket connection');
 
 
     try {
@@ -76,7 +76,6 @@ wss.on('connection', async (ws) => {
 
 
 broadcastUpdate = async (id,isBreak) => {
-    console.log("id",id)
     try {
         let player ;
         if(id){
@@ -99,13 +98,11 @@ broadcastUpdate = async (id,isBreak) => {
             
         }
 
-        console.log("player",player)
         const playerlists = await auctionListModel.findOne({where:{playerid:player.dataValues.id}}) ;
     const  data ={
         ...player.dataValues,
         value:playerlists?.value
     }
-        console.log("player",player)
         // if (player) {
             wss.clients.forEach((client) => {
                 if (client.readyState === client.OPEN) {
@@ -113,7 +110,6 @@ broadcastUpdate = async (id,isBreak) => {
                         isBreak,
                         data
                     }                    
-                    console.log("resData",resData)
                     
                     client.send(JSON.stringify(resData));
                 }
@@ -131,6 +127,9 @@ broadcastUpdate = async (id,isBreak) => {
 app.post('/update-player/score', async (req, res) => {
     try {
         const { id, value, isBreak, changed, is_sold, teamid } = req.body;
+        const token = req?.headers?.token;
+        console.log("token",req.headers);
+        await authValidate(token,res)
 
         if (changed === false || changed === 'false') {
 
@@ -139,17 +138,18 @@ app.post('/update-player/score', async (req, res) => {
             }
 
             if (!value) {
-                console.log("value", value);
                 return sendResponse('error', 401, 'Auction value Missing', null, null, res);
             }
 
             if (!teamid) {
                 return sendResponse('error', 401, 'Teamid Missing', null, null, res);
             }
+            if(is_sold==0){
 
-            const history = await auctionHistoryModel.findAll({ where: { playerid: id }, order: [['id', 'DESC']] });
-            if (history &&history[0]?.dataValues?.value >= value) {
-                return sendResponse('error', 401, `Provide greater value than ${history[0].dataValues.value}`, null, null, res);
+                const history = await auctionHistoryModel.findAll({ where: { playerid: id }, order: [['id', 'DESC']] });
+                if (history &&history[0]?.dataValues?.value >= value) {
+                    return sendResponse('error', 401, `Provide greater value than ${history[0].dataValues.value}`, null, null, res);
+                }
             }
 
             const auctionid = await auctionHistoryModel.create({
@@ -178,7 +178,6 @@ app.post('/update-player/score', async (req, res) => {
             
 
             if (is_sold == 1) {
-                console.log("auctionid", auctionid.id);
                 
 
                 await playerModel.update({ is_sold,teamid }, { where: { id } });  // Fix the where clause here

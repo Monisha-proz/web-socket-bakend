@@ -86,7 +86,8 @@ exports.auctionHistory = async (req,res)=>{
                 model: teamModel,
                 as: 'team',
                 required: false // Use a left join
-            }]
+            }],
+            order: [['id', 'DESC']]
         });
         return sendResponse('success',200,null,null, history,res)
 
