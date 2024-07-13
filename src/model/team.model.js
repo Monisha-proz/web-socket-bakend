@@ -12,7 +12,23 @@ const Team = DBconnection.define('teams', {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    owner: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    mobileno: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     no_players: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    team_amount:{
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    used_amount:{
       type: DataTypes.INTEGER,
       allowNull: true,
     },
@@ -23,6 +39,10 @@ const Team = DBconnection.define('teams', {
     is_active: {
       type: DataTypes.TINYINT,
       defaultValue: 1,
+    },
+    is_retained: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
     },
     
   }, {

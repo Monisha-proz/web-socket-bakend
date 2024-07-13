@@ -14,7 +14,16 @@ const Players = DBconnection.define(
     name: {
       type: DataTypes.STRING(255),
       allowNull: true,
-    },   
+    },  
+    mobileno: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },  
+    cricheroes: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },  
+     
     match_count: {
       type: DataTypes.TINYINT,
       allowNull: true,
@@ -24,6 +33,14 @@ const Players = DBconnection.define(
       allowNull: true,
     },
     role: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    batting_style: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    batting_style: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },

@@ -35,6 +35,11 @@ const AuctionList = DBconnection.define('auction_list', {
         type: DataTypes.TINYINT,
         defaultValue: 1,
     },
+    is_retained: {
+        type: DataTypes.TINYINT,
+        defaultValue: 0,
+      },
+   
     
 }, {
     timestamps: false,

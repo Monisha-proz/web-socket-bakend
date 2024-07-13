@@ -22,6 +22,7 @@ const { authValidate } = require("./src/utils/authValidate");
 app.use(bodyParser.json());
 app.use(cors());
 app.use("/", router);
+app.use('/assets', express.static('assets'));
 
 const PORT = process.env.PORT || 3005;
 
@@ -38,7 +39,7 @@ let playerlist=[];
     const playerdata = await playerModel.findOne({where:{is_sold:0,is_cancel:0},
         include:[{
         model:teamModel,
-        attributes:['profile_url'],            
+        attributes:['id','profile_url'],            
         where: {}
     }],
     order: [['id', 'ASC']],
@@ -81,14 +82,14 @@ broadcastUpdate = async (id,isBreak) => {
         if(id){
             player = await playerModel.findOne({ where: { id },include:[{
                model:teamModel,
-               attributes:['profile_url'],            
+               attributes:['id','profile_url'],            
                where: {}
            }] });
 
         }else{
             player = await playerModel.findOne({ where: { is_sold:0,is_cancel:0 },include:[{
                 model:teamModel,
-                attributes:['profile_url'],            
+                attributes:['id','profile_url'],            
                 where: {}
             }],
             order: [['id', 'ASC']],
@@ -126,13 +127,16 @@ broadcastUpdate = async (id,isBreak) => {
 
 app.post('/update-player/score', async (req, res) => {
     try {
-        const { id, value, isBreak, changed, is_sold, teamid } = req.body;
+        const { id, value, isBreak, changed, is_sold, teamid,is_cancel } = req.body;
         const token = req?.headers?.token;
-        console.log("token",req.headers);
-        await authValidate(token,res)
+        await authValidate(token, res);
+        if(is_cancel===1 ||is_cancel==="1"){
+            await playerModel.update({is_cancel:1},{where:{id}});
+            sendResponse('success', 200, 'Player Closed Succefully', null, null, res);
+
+        }
 
         if (changed === false || changed === 'false') {
-
             if (!id) {
                 return sendResponse('error', 401, 'Player id Missing', null, null, res);
             }
@@ -144,12 +148,17 @@ app.post('/update-player/score', async (req, res) => {
             if (!teamid) {
                 return sendResponse('error', 401, 'Teamid Missing', null, null, res);
             }
-            if(is_sold==0){
 
+            if (is_sold == 0) {
                 const history = await auctionHistoryModel.findAll({ where: { playerid: id }, order: [['id', 'DESC']] });
-                if (history &&history[0]?.dataValues?.value >= value) {
+                if (history && history[0]?.dataValues?.value >= value) {
                     return sendResponse('error', 401, `Provide greater value than ${history[0].dataValues.value}`, null, null, res);
                 }
+            }
+
+            const totalPlayer = await teamModel.findOne({ where: { id: teamid } });
+            if (totalPlayer.no_players > 14) {
+                return sendResponse('error', 401, `Already have 15 players in this team, couldn't add extra player`, null, null, res);
             }
 
             const auctionid = await auctionHistoryModel.create({
@@ -158,35 +167,45 @@ app.post('/update-player/score', async (req, res) => {
                 teamid,
                 year: getYear()
             });
+
             const autionList = await auctionListModel.findOne({ where: { playerid: id }, order: [['id', 'DESC']] });
-                if (!autionList) {
-                    await auctionListModel.create({
-                        playerid: id,
-                        teamid,
-                        value,
-                        year: getYear(),
-                        auctionid: auctionid.id,
-                    });
-                } else {
-                    await auctionListModel.update({
-                        value,
-                        teamid,
-                        year: getYear(),
-                        auctionid: auctionid.id
-                    }, { where: { id: autionList.dataValues.id } });
-                }
             
+            // Logging the autionList to debug
+            console.log('autionList:', autionList);
 
+            if (!autionList) {
+                await auctionListModel.create({
+                    playerid: id,
+                    teamid,
+                    value,
+                    year: getYear(),
+                    auctionid: auctionid.id,
+                });
+            } else {
+                // Logging values before update
+                console.log('Updating auctionList with:', { value, teamid, year: getYear(), auctionid: auctionid.id });
+                autionList.value =value;
+                autionList.teamid =teamid;
+                autionList.year =getYear();
+                autionList.auctionid =auctionid.dataValues.id;
+                await autionList.save();
+                // await auctionListModel.update({
+                //     value,
+                //     teamid,
+                //     year: getYear(),
+                //     auctionid: auctionid.id
+                // }, { where: { id: autionList.dataValues.id } });
+            }
+
+            await playerModel.update({ is_sold:0, teamid }, { where: { id } });
             if (is_sold == 1) {
-                
+                await playerModel.update({ is_sold, teamid }, { where: { id } });
 
-                await playerModel.update({ is_sold,teamid }, { where: { id } });  // Fix the where clause here
-               const totalPlayer= await teamModel.findOne({where:{id:teamid}});
-                const increase_totalPlayer = Number(totalPlayer.no_players)+1;
-                // await teamModel.update(increase_totalPlayer,{where:{id:teamid}})
-                totalPlayer.no_players =increase_totalPlayer;
-                await totalPlayer.save()
-
+                const increase_totalPlayer = Number(totalPlayer.no_players) + 1;
+                const increase_usedAmoung = Number(totalPlayer.used_amount)+ Number(value)
+                totalPlayer.no_players = increase_totalPlayer;
+                totalPlayer.used_amount =increase_usedAmoung;
+                await totalPlayer.save();
             }
         }
 
@@ -205,6 +224,7 @@ app.post('/update-player/score', async (req, res) => {
         }
     }
 });
+
 
 
 
