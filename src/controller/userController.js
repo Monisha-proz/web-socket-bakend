@@ -6,6 +6,7 @@ const {sendResponse} = require('../utils/response')
 
 exports.login = async(req,res)=>{
     try{
+        console.log('req',req)
         const {email, password} = req.body;
         const user = await userModel.findOne({where:{email,password}});
         if(!user){
@@ -17,6 +18,7 @@ exports.login = async(req,res)=>{
         
         user.token = token;
         await user.save();
+        console.log("user",user)
         sendResponse('success', 200, 'login Succesfully',null,user,res)
          
     }catch(err){

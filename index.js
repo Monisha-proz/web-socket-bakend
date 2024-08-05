@@ -39,7 +39,7 @@ let playerlist=[];
     const playerdata = await playerModel.findOne({where:{is_sold:0,is_cancel:0},
         include:[{
         model:teamModel,
-        attributes:['id','profile_url'],            
+        attributes:['id','profile_url','name'],            
         where: {}
     }],
     order: [['id', 'ASC']],
@@ -82,14 +82,14 @@ broadcastUpdate = async (id,isBreak) => {
         if(id){
             player = await playerModel.findOne({ where: { id },include:[{
                model:teamModel,
-               attributes:['id','profile_url'],            
+               attributes:['id','profile_url','name'],            
                where: {}
            }] });
 
         }else{
             player = await playerModel.findOne({ where: { is_sold:0,is_cancel:0 },include:[{
                 model:teamModel,
-                attributes:['id','profile_url'],            
+                attributes:['id','profile_url','name'],            
                 where: {}
             }],
             order: [['id', 'ASC']],
